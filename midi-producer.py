@@ -45,6 +45,10 @@ def handle_arguments():
 
 
 def delivery_report(err, msg):
+    # print('delivery', err, msg)
+    print('message value', msg.value()) 
+    print('message offset', msg.offset()) 
+    print('message latency', msg.latency()) 
     if err is not None:
         print('Message delivery failed: {}'.format(err))
 
@@ -58,6 +62,7 @@ def play_notes(producer, topic, midi_file, speed_ratio, additional_payload_size)
         # print(f"Midi Message Tempo {midi_msg.time}")
 
         if not midi_msg.is_meta and midi_msg.type in ('note_on', 'note_off'):
+            # print("KAFKA MESSAGE")
             payload = ''.join(random.choices(string.ascii_uppercase + string.digits, k=additional_payload_size)) \
                 if additional_payload_size else ''
             kafka_msg = json.dumps({
@@ -100,7 +105,14 @@ def main():
     else:
         files_to_play = [args.midi_files]
 
-    p = Producer({'bootstrap.servers': args.bootstrap_servers})
+    p = Producer({
+                'bootstrap.servers': args.bootstrap_servers
+                # 'batch.size': 100,
+                # # 'acks': 1,
+                # # 'linger_ms': 0,
+                # # 'socket.nagle.disable': True,
+                # 'queue.buffering.max.ms': 0
+                })
     for f in files_to_play:
         play_notes(producer=p, topic=args.notes_topic, midi_file=f,
                    speed_ratio=speed_ratio, additional_payload_size=args.record_size)

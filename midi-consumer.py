@@ -57,7 +57,7 @@ def receive_notes(bootstrap_servers, notes_topic, outport):
     c.subscribe([notes_topic])
 
     while True:
-        msg = c.poll(5.0)
+        msg = c.poll(1.0)
 
         if msg is None:
             continue
