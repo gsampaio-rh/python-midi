@@ -50,9 +50,12 @@ def delivery_report(err, msg):
 
 
 def play_notes(producer, topic, midi_file, speed_ratio, additional_payload_size):
-    print(f"Playing {midi_file}... at {speed_ratio}")
-    for midi_msg in MidiFile(midi_file):
-        time.sleep(midi_msg.time * speed_ratio)
+    # print(f"Playing {midi_file}... at {speed_ratio}")
+    print(f"Midi File {midi_file}")
+    print(f"Midi File Length {MidiFile(midi_file).length}")
+    for midi_msg in MidiFile(midi_file).play():
+        # time.sleep(midi_msg.time * speed_ratio)
+        # print(f"Midi Message Tempo {midi_msg.time}")
 
         if not midi_msg.is_meta and midi_msg.type in ('note_on', 'note_off'):
             payload = ''.join(random.choices(string.ascii_uppercase + string.digits, k=additional_payload_size)) \
