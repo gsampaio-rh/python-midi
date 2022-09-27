@@ -29,6 +29,7 @@ def main():
     print("Starting Virtual MIDI Port")
     print()
     midiout = rtmidi.MidiOut()
+    midiin = rtmidi.MidiIn()
 
     print('Input Ports:', mido.get_input_names())
     print('Output Ports:', mido.get_output_names())
@@ -37,6 +38,7 @@ def main():
     print("Outport name -> ",args.name)
     print()
     midiout.open_virtual_port(args.name)
+    midiin.open_virtual_port(args.name)
 
     print('Input Ports:', mido.get_input_names())
     print('Output Ports:', mido.get_output_names())
