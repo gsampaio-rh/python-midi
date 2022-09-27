@@ -48,10 +48,12 @@ def handle_arguments():
 
 def delivery_report(err, msg):
     # print('delivery', err, msg)
-    print('message value', msg.value()) 
     print('message offset', msg.offset()) 
+    print('message value', msg.value()) 
     print('message size', msg.__len__()) 
     print('message latency', msg.latency()) 
+    print('-----------Delivered to Kafka-----------')
+    print('----------------------------------------')
     
     if err is not None:
         print('Message delivery failed: {}'.format(err))
@@ -79,7 +81,9 @@ def play_notes(producer, topic, midi_file, speed_ratio, additional_payload_size)
                 # 'bytes': str(midi_msg.bin()),
                 'extra_payload': payload
             })
-            
+
+            print('****************************************')
+            print('*************Read from Midi*************')
             now = datetime.now()
             print(now)
             print(kafka_msg)
@@ -122,6 +126,8 @@ def main():
     for f in files_to_play:
         play_notes(producer=p, topic=args.notes_topic, midi_file=f,
                    speed_ratio=speed_ratio, additional_payload_size=args.record_size)
+
+    p.flush()
 
 
 if __name__ == "__main__":

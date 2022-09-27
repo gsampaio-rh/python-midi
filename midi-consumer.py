@@ -45,7 +45,7 @@ def sound_note(kafka_msg, outport):
     print(mido_msg)
     # print_note(mido_msg)
     # print("Send to MIDI Output Port -> " + str(outport))
-    # mido.open_output(outport).send(mido_msg)
+    mido.open_output(outport).send(mido_msg)
     # outport.send(mido_msg)
 
 
