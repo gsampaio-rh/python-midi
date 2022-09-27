@@ -3,6 +3,7 @@ import json
 from signal import signal, SIGINT
 from sys import exit
 from sys import getsizeof
+from datetime import datetime
 
 from confluent_kafka import Consumer  #, KafkaError
 from confluent_kafka import Message
@@ -39,14 +40,26 @@ def print_note(note_value):
 
 
 def sound_note(kafka_msg, outport):
-    json_mido_msg = json.loads(kafka_msg.value())
-    print(json_mido_msg)
-    mido_msg = mido.Message.from_bytes(bytearray.fromhex(json_mido_msg['hex']))
-    print(mido_msg)
-    # print_note(mido_msg)
+    json_mid_msg = json.loads(kafka_msg.value())
+    # print(json_mid_msg)
+    
+    midi_msg = mido.Message.from_bytes(bytearray.fromhex(json_mid_msg['hex']))
+    
+    if not midi_msg.is_meta and midi_msg.type in ('note_on', 'note_off'):
+        print('note', midi_msg.note)
+        if  midi_msg.type in ('note_on'):
+            print('type ✅', midi_msg.type)
+        if  midi_msg.type in ('note_off'):
+            print('type 🔴', midi_msg.type)
+        print('velocity', midi_msg.velocity)
+        print('time', midi_msg.time)
+        print('channel', midi_msg.channel)
+        # print('hex', midi_msg.hex) 
+    
+    print(midi_msg)
+    # print_note(midi_msg)
     # print("Send to MIDI Output Port -> " + str(outport))
-    mido.open_output(outport).send(mido_msg)
-    # outport.send(mido_msg)
+    mido.open_output(outport).send(midi_msg)
 
 
 def receive_notes(bootstrap_servers, notes_topic, outport):
@@ -65,16 +78,21 @@ def receive_notes(bootstrap_servers, notes_topic, outport):
             continue
         else:
             # print(msg)
-            print('message value', msg.value()) 
+            # print('message value', msg.value())
+            print ('---------------------------')
+            now = datetime.now()
             print('message offset', msg.offset()) 
+            print(now)
             print('message size', msg.__len__()) 
-            print('message latency', msg.latency()) 
+            # print('message latency', msg.latency()) 
 
         if msg.error():
             print("Consumer error: {}".format(msg.error()))
             continue
-
+        
         sound_note(msg, outport)
+        past = datetime.now()
+        print('Latency Kafka - Sound',past - now)
 
     c.close()
 
@@ -94,7 +112,6 @@ def main():
     else:
         outport = None
 
-    # print_ports('Input Ports:', mido.get_input_names())
     print("Input Ports")
     print(mido.get_input_names())
     print("Output Ports")
@@ -102,11 +119,6 @@ def main():
 
     print("Waiting for notes...")
     receive_notes(args.bootstrap_servers, args.notes_topic, outport)
-
-    # with mido.open_output(args.output_port) as outport:
-    #     print("Waiting for notes...")
-    #     receive_notes(args.bootstrap_servers, args.notes_topic, outport)
-
 
 if __name__ == "__main__":
     main()
