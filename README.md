@@ -76,4 +76,5 @@ optional arguments:
 
 Notes: 
 > **ℹ️ NOTE:** You should adjust the number of partitions and replication factor to match your typical cluster setup.
+
 > **ℹ️ NOTE:** Why use `--record-size`? This is optional but MIDI messages are very small and are written/read very quickly. When these messages are delayed, it's typically by milliseconds and the change in melody may not be noticeable. When this option is used, the player adds a random payload to make the messages bigger.   
