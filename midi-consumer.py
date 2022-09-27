@@ -2,8 +2,10 @@ import argparse
 import json
 from signal import signal, SIGINT
 from sys import exit
+from sys import getsizeof
 
 from confluent_kafka import Consumer  #, KafkaError
+from confluent_kafka import Message
 import mido
 
 
@@ -43,7 +45,7 @@ def sound_note(kafka_msg, outport):
     print(mido_msg)
     # print_note(mido_msg)
     # print("Send to MIDI Output Port -> " + str(outport))
-    mido.open_output(outport).send(mido_msg)
+    # mido.open_output(outport).send(mido_msg)
     # outport.send(mido_msg)
 
 
@@ -57,10 +59,17 @@ def receive_notes(bootstrap_servers, notes_topic, outport):
     c.subscribe([notes_topic])
 
     while True:
-        msg = c.poll(1.0)
-
+        msg = c.poll(0.1)
+        
         if msg is None:
             continue
+        else:
+            # print(msg)
+            print('message value', msg.value()) 
+            print('message offset', msg.offset()) 
+            print('message size', msg.__len__()) 
+            print('message latency', msg.latency()) 
+
         if msg.error():
             print("Consumer error: {}".format(msg.error()))
             continue

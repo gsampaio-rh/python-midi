@@ -4,7 +4,9 @@ import random
 from signal import signal, SIGINT
 import string
 from sys import exit
+from sys import getsizeof
 import time
+from datetime import datetime
 
 from mido import MidiFile
 from confluent_kafka import Producer
@@ -48,7 +50,9 @@ def delivery_report(err, msg):
     # print('delivery', err, msg)
     print('message value', msg.value()) 
     print('message offset', msg.offset()) 
+    print('message size', msg.__len__()) 
     print('message latency', msg.latency()) 
+    
     if err is not None:
         print('Message delivery failed: {}'.format(err))
 
@@ -76,10 +80,12 @@ def play_notes(producer, topic, midi_file, speed_ratio, additional_payload_size)
                 'extra_payload': payload
             })
             
+            now = datetime.now()
+            print(now)
             print(kafka_msg)
+
             # kafka_msg_json = json.loads(kafka_msg)
             # print(kafka_msg_json["hex"])
-            
             producer.produce(topic, value=kafka_msg.encode('utf-8'), key=midi_file, callback=delivery_report)
             producer.poll(0)
 
@@ -108,10 +114,10 @@ def main():
     p = Producer({
                 'bootstrap.servers': args.bootstrap_servers
                 # 'batch.size': 100,
-                # # 'acks': 1,
-                # # 'linger_ms': 0,
-                # # 'socket.nagle.disable': True,
-                # 'queue.buffering.max.ms': 0
+                # 'linger.ms': 0,
+                # 'compression.type': 0,
+                # 'max.in.flight.requests.per.connection': 0,
+                # 'acks': 1
                 })
     for f in files_to_play:
         play_notes(producer=p, topic=args.notes_topic, midi_file=f,
