@@ -64,7 +64,7 @@ def sound_note(kafka_msg, outport):
     print(midi_msg)
     # print_note(midi_msg)
     # print("Send to MIDI Output Port -> " + str(outport))
-    if args.virtual_midi:
+    if isinstance(outport, rtmidi.MidiOut):
         outport.send_message(midi_msg.bytes())
     else:
         mido.open_output(outport).send(midi_msg)
@@ -130,6 +130,7 @@ def main():
     print(mido.get_output_names())
 
     print("Output Port -> ",outport)
+    # print(type(outport))
 
     print("Waiting for notes...")
     receive_notes(args.bootstrap_servers, args.notes_topic, outport)
