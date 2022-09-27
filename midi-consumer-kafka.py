@@ -23,7 +23,7 @@ def handle_arguments():
     
     parser.add_argument("-o", "--output-port",
                         help="Midi output port (defaults = 'midi_notes')",
-                        default="midi")
+                        default="virtualmidioutputport")
 
     return parser.parse_args()
 
@@ -116,6 +116,8 @@ def main():
     print(mido.get_input_names())
     print("Output Ports")
     print(mido.get_output_names())
+
+    print("Output Port -> ",outport)
 
     print("Waiting for notes...")
     receive_notes(args.bootstrap_servers, args.notes_topic, outport)
