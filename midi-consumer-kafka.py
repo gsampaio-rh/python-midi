@@ -19,15 +19,15 @@ def handle_arguments():
                         default="localhost:9092")
 
     parser.add_argument("-t", "--notes_topic",
-                        help="Topic to consume notes from (defaults = 'midi_notes')",
+                        help="Topic to consume notes from (defaults to 'midi')",
                         default="midi")
     
     parser.add_argument("-o", "--output-port",
-                        help="Midi output port (defaults = 'midi_notes')",
+                        help="MIDI output port (defaults to 'midi')",
                         default="midi")
     
-    parser.add_argument('-v', '--virtual-midi',
-                        help="Use Virtual Midi",
+    parser.add_argument('-v', '--virtual-midi-port',
+                        help="Enables a virtual MIDI output port (midivirtualoutput)",
                         action="store_true")
 
     return parser.parse_args()
@@ -69,8 +69,6 @@ def sound_note(kafka_msg, outport):
     else:
         mido.open_output(outport).send(midi_msg)
     
-
-
 def receive_notes(bootstrap_servers, notes_topic, outport):
     c = Consumer({
         'bootstrap.servers': bootstrap_servers,
@@ -118,7 +116,7 @@ def main():
     if args.output_port is None:
         outport = None
     else:
-        if args.virtual_midi:
+        if args.virtual_midi_port:
             midiout = rtmidi.MidiOut()
             outport = midiout.open_virtual_port("midivirtualoutput")
         else:
