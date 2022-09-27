@@ -29,22 +29,12 @@ def handle_arguments():
                         help="Topic to produce (play) notes to (defaults = 'midi_notes')",
                         default="midi")
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-s", "--speed-ratio",
-                        help="Speed ratio (1.1 slows down production by 10%%, 0.9 speeds up by 10%%, defaults = 1.0)",
-                        default=1.0, type=float)
-    group.add_argument('--gg-1955', action='store_true',
-                       help="Speed ratio corresponding to Glenn Gould's 1955 intepretation of the Goldberg Variations")
-    group.add_argument('--gg-1981', action='store_true',
-                       help="Speed ratio corresponding to Glenn Gould's 1981 intepretation of the Goldberg Variations")
-
     parser.add_argument("--record-size",
                         help="Additional payload to add to each MIDI note message to match the cluster/application average message size",
                         type=int,
                         default=0)
 
     return parser.parse_args()
-
 
 def delivery_report(err, msg):
     # print('delivery', err, msg)
@@ -58,13 +48,10 @@ def delivery_report(err, msg):
     if err is not None:
         print('Message delivery failed: {}'.format(err))
 
-
-def play_notes(producer, topic, midi_file, speed_ratio, additional_payload_size):
-    # print(f"Playing {midi_file}... at {speed_ratio}")
+def play_notes(producer, topic, midi_file, additional_payload_size):
     print(f"Midi File {midi_file}")
     print(f"Midi File Length {MidiFile(midi_file).length}")
     for midi_msg in MidiFile(midi_file).play():
-        # time.sleep(midi_msg.time * speed_ratio)
         # print(f"Midi Message Tempo {midi_msg.time}")
 
         if not midi_msg.is_meta and midi_msg.type in ('note_on', 'note_off'):
@@ -93,7 +80,6 @@ def play_notes(producer, topic, midi_file, speed_ratio, additional_payload_size)
             producer.produce(topic, value=kafka_msg.encode('utf-8'), key=midi_file, callback=delivery_report)
             producer.poll(0)
 
-
 def main():
     def ctrl_c_handler(signal_received, frame):
         # Handle any cleanup here
@@ -103,12 +89,6 @@ def main():
 
     signal(SIGINT, ctrl_c_handler)
     args = handle_arguments()
-
-    speed_ratio = args.speed_ratio
-    if args.gg_1955:
-        speed_ratio = 0.65
-    elif args.gg_1981:
-        speed_ratio = 1.2
 
     if args.midi_files.find('*') != -1:
         files_to_play = files_from_wildcard(args.midi_files)
@@ -123,12 +103,12 @@ def main():
                 # 'max.in.flight.requests.per.connection': 0,
                 # 'acks': 1
                 })
+
     for f in files_to_play:
-        play_notes(producer=p, topic=args.notes_topic, midi_file=f,
-                   speed_ratio=speed_ratio, additional_payload_size=args.record_size)
+        play_notes(producer=p, topic=args.notes_topic, midi_file=f, 
+                additional_payload_size=args.record_size)
 
     p.flush()
-
 
 if __name__ == "__main__":
     main()
