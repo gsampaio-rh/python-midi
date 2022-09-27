@@ -4,10 +4,10 @@ from signal import signal, SIGINT
 from sys import exit
 from datetime import datetime
 
+import rtmidi
+
 import mido
 from mido import MidiFile
-
-import rtmidi
 
 from file_wildcards import files_from_wildcard
 

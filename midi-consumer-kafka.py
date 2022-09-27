@@ -5,10 +5,11 @@ from sys import exit
 from sys import getsizeof
 from datetime import datetime
 
-from confluent_kafka import Consumer  #, KafkaError
-from confluent_kafka import Message
+import rtmidi
 import mido
 
+from confluent_kafka import Consumer  #, KafkaError
+from confluent_kafka import Message
 
 def handle_arguments():
     parser = argparse.ArgumentParser(description='Plays/consumes MIDI notes from a Kafka topic')
@@ -23,7 +24,11 @@ def handle_arguments():
     
     parser.add_argument("-o", "--output-port",
                         help="Midi output port (defaults = 'midi_notes')",
-                        default="virtualmidioutputport")
+                        default="midi")
+    
+    parser.add_argument('-v', '--virtual-midi',
+                        help="Use Virtual Midi",
+                        action="store_true")
 
     return parser.parse_args()
 
@@ -59,7 +64,11 @@ def sound_note(kafka_msg, outport):
     print(midi_msg)
     # print_note(midi_msg)
     # print("Send to MIDI Output Port -> " + str(outport))
-    mido.open_output(outport).send(midi_msg)
+    if args.virtual_midi:
+        outport.send_message(midi_msg.bytes())
+    else:
+        mido.open_output(outport).send(midi_msg)
+    
 
 
 def receive_notes(bootstrap_servers, notes_topic, outport):
@@ -96,7 +105,6 @@ def receive_notes(bootstrap_servers, notes_topic, outport):
 
     c.close()
 
-
 def main():
     def ctrl_c_handler(signal_received, frame):
         # Handle any cleanup here
@@ -108,9 +116,13 @@ def main():
     args = handle_arguments()
     
     if args.output_port is None:
-        outport = args.output_port
-    else:
         outport = None
+    else:
+        if args.virtual_midi:
+            midiout = rtmidi.MidiOut()
+            outport = midiout.open_virtual_port("midivirtualoutput")
+        else:
+            outport = args.output_port
 
     print("Input Ports")
     print(mido.get_input_names())
